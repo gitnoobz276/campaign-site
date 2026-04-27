@@ -6,12 +6,14 @@
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: Arial;
+      text-align: center;
+      background: black;
+      color: white;
     }
 
     .container {
       position: relative;
-      width: 100%;
       max-width: 1000px;
       margin: auto;
     }
@@ -21,61 +23,93 @@
       display: block;
     }
 
-    /* COUNTER */
     #counter {
       position: absolute;
-      top: 280px;   /* 🔧 adjust */
+      top: 280px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 70px;
-      font-weight: bold;
       color: yellow;
-      text-shadow: 2px 2px 10px black;
     }
 
-    /* BUTTON */
     #btn {
       position: absolute;
-      top: 450px;   /* 🔧 adjust */
+      top: 450px;
       left: 50%;
       transform: translateX(-50%);
       padding: 15px 40px;
       font-size: 22px;
-      border: none;
-      border-radius: 10px;
-      background: #ff4757;
-      color: white;
       cursor: pointer;
-      transition: 0.2s;
     }
 
-    #btn:hover {
-      background: #ff6b81;
-      transform: translateX(-50%) scale(1.05);
-    }
-
-    #btn:disabled {
-      background: gray;
-      cursor: not-allowed;
+    #timer {
+      font-size: 25px;
+      margin: 20px;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
-    <img src="cover.png" class="bg">
+<div id="message"></div>
+<div id="timer"></div>
 
-    <div id="counter">0</div>
-    <button id="btn">Vote</button>
-  </div>
+<div class="container" id="mainContent" style="display:none;">
+  <img src="cover.png" class="bg">
+  <div id="counter">0</div>
+  <button id="btn">Vote</button>
+</div>
 
-  <script>
-    let count = localStorage.getItem("count") || 0;
+<script>
+const counter = document.getElementById("counter");
+const btn = document.getElementById("btn");
+const message = document.getElementById("message");
+const mainContent = document.getElementById("mainContent");
+const timerEl = document.getElementById("timer");
+
+// 🔥 DEADLINE (IST)
+const deadline = new Date("May 4, 2026 00:00:00 GMT+0530").getTime();
+
+// TIMER
+function updateTimer() {
+  const now = new Date().getTime();
+  const diff = deadline - now;
+
+  if (diff <= 0) {
+    document.body.innerHTML = "<h1>The day of voting has come! You can't access this website anymore.</h1>";
+    return;
+  }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+
+  timerEl.innerText = `Time left: ${days}d ${hours}h ${minutes}m`;
+}
+
+setInterval(updateTimer, 1000);
+updateTimer();
+
+// 🌍 LOCATION CHECK (using free API)
+fetch("https://ipapi.co/json/")
+  .then(res => res.json())
+  .then(data => {
+
+    const city = data.city;
+    const region = data.region;
+    const country = data.country_name;
+
+    if (city !== "Kolkata") {
+      document.body.innerHTML = "<h1>Sorry! Your country/state is not eligible for this participation.</h1>";
+      return;
+    }
+
+    // ✅ Allow access
+    mainContent.style.display = "block";
+
+    // LOCAL COUNTER (Kolkata users only)
+    let count = localStorage.getItem("kolkataVotes") || 0;
     let voted = localStorage.getItem("voted");
-
-    const counter = document.getElementById("counter");
-    const btn = document.getElementById("btn");
 
     counter.innerText = count;
 
@@ -88,7 +122,7 @@
       if (voted) return;
 
       count++;
-      localStorage.setItem("count", count);
+      localStorage.setItem("kolkataVotes", count);
       localStorage.setItem("voted", "true");
 
       counter.innerText = count;
@@ -96,7 +130,12 @@
       btn.disabled = true;
       btn.innerText = "Already Voted";
     };
-  </script>
+
+  })
+  .catch(() => {
+    document.body.innerHTML = "<h1>Error detecting location. Please try again.</h1>";
+  });
+</script>
 
 </body>
 </html>
