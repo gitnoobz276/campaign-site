@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Campaign</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial;
+      background: #111;
+      color: white;
+    }
+
+    #counter {
+      font-size: 60px;
+      margin: 20px;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Canva image -->
+  <img src="cover.png" width="100%" alt="Campaign Cover">
+
+  <h1 id="counter">0</h1>
+  <button id="btn">Click</button>
+
+  <script>
+    let count = localStorage.getItem("count") || 0;
+    document.getElementById("counter").innerText = count;
+
+    let cooldown = false;
+
+    document.getElementById("btn").onclick = () => {
+      if (cooldown) return;
+
+      count++;
+      localStorage.setItem("count", count);
+      document.getElementById("counter").innerText = count;
+
+      cooldown = true;
+      setTimeout(() => cooldown = false, 2000);
+    };
+  </script>
+
+</body>
+</html>
