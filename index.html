@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Kolkata Voting</title>
+  <title>SCIS School Captain Voting</title>
 
-  <!-- MOBILE FIX -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -27,58 +26,64 @@
       display: block;
     }
 
+    /* COUNTER */
     #counter {
-  position: absolute;
-  top: 28%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  
-  font-size: clamp(30px, 6vw, 60px); /* 🔥 fixes size */
-  color: yellow;
-  text-shadow: 2px 2px 10px black;
-}
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(30px, 6vw, 60px);
+      color: yellow;
+      text-shadow: 2px 2px 10px black;
+    }
 
-#btn {
-  position: absolute;
-  top: 60%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  
-  padding: clamp(8px, 2vw, 20px) clamp(15px, 4vw, 40px);
-  font-size: clamp(14px, 3vw, 22px);
-  
-  border: none;
-  border-radius: 10px;
-  background: #ff4757;
-  color: white;
-  cursor: pointer;
-}
+    /* BUTTON */
+    #btn {
+      position: absolute;
+      top: 60%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: clamp(8px, 2vw, 20px) clamp(15px, 4vw, 40px);
+      font-size: clamp(14px, 3vw, 22px);
+      border: none;
+      border-radius: 10px;
+      background: #ff4757;
+      color: white;
+      cursor: pointer;
+    }
 
     #btn:disabled {
       background: gray;
       cursor: not-allowed;
     }
 
-#message {
-  font-size: clamp(18px, 4vw, 28px);
-  font-weight: bold;
-  margin-top: 20px;
-  
-  color: #00ffcc;
-  text-shadow: 0 0 15px #00ffcc;
-}
+    /* MESSAGE */
+    #message {
+      font-size: clamp(18px, 4vw, 28px);
+      font-weight: bold;
+      margin: 15px;
+      color: #00ffcc;
+    }
+
+    /* TIMER */
+    #timer {
+      font-size: clamp(16px, 3vw, 24px);
+      margin-bottom: 10px;
+      color: #ffffff;
+    }
   </style>
 </head>
 
 <body>
 
-<div id="message">Checking location...</div>
+<div id="message">Checking eligibility...</div>
+<div id="timer"></div>
 
 <div class="container" id="mainContent" style="display:none;">
   <img src="cover.png" class="bg">
 
   <div id="counter">0</div>
-  <button id="btn">Vote</button>
+  <button id="btn">Vote for School Captain</button>
 </div>
 
 <script>
@@ -86,33 +91,60 @@ const counter = document.getElementById("counter");
 const btn = document.getElementById("btn");
 const message = document.getElementById("message");
 const mainContent = document.getElementById("mainContent");
+const timerEl = document.getElementById("timer");
 
-// UNIQUE GLOBAL COUNTER (KOLKATA ONLY USERS WILL ACCESS IT)
-const namespace = "kolkata-voting-2026";
-const key = "votes";
+// 🕒 DEADLINE (4 May 2026, 11:59 PM IST)
+const deadline = new Date("May 4, 2026 23:59:00 GMT+0530").getTime();
 
-// 📍 LOCATION CHECK
+// TIMER FUNCTION
+function updateTimer() {
+  const now = new Date().getTime();
+  const diff = deadline - now;
+
+  if (diff <= 0) {
+    document.body.innerHTML = "<h1>The day of voting has come! You can't access this website anymore.</h1>";
+    return;
+  }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+
+  timerEl.innerText = `Voting ends in: ${days}d ${hours}h ${minutes}m`;
+}
+
+setInterval(updateTimer, 1000);
+updateTimer();
+
+// 🌍 LOCATION CHECK
 fetch("https://ipapi.co/json/")
   .then(res => res.json())
   .then(location => {
 
-    if (location.city !== "Kolkata") {
-      document.body.innerHTML = "<h1>Sorry! Your country/state is not eligible for this participation.</h1>";
+    if (
+      location.region !== "West Bengal" ||
+      location.country_name !== "India"
+    ) {
+      document.body.innerHTML = "<h1>Sorry! Only Kolkata region users can participate.</h1>";
       return;
     }
 
-    // ✅ Allow access
-    message.innerText = "Welcome Kolkata voter!";
+    // ✅ Allow
+    message.innerText = "SCIS School Captain Voting - Kolkata Voter";
+
     mainContent.style.display = "block";
 
-    // 🔢 LOAD GLOBAL COUNTER
+    // 🌐 GLOBAL COUNTER
+    const namespace = "scis-captain-2026";
+    const key = "votes";
+
     fetch(`https://api.countapi.xyz/get/${namespace}/${key}`)
       .then(res => res.json())
       .then(data => {
         counter.innerText = data.value;
       });
 
-    // 🚫 PREVENT MULTIPLE VOTES (basic)
+    // 🚫 ONE VOTE
     let voted = localStorage.getItem("voted");
 
     if (voted) {
@@ -120,7 +152,6 @@ fetch("https://ipapi.co/json/")
       btn.innerText = "Already Voted";
     }
 
-    // 🗳️ VOTE ACTION
     btn.onclick = () => {
       if (voted) return;
 
@@ -132,12 +163,12 @@ fetch("https://ipapi.co/json/")
 
       localStorage.setItem("voted", "true");
       btn.disabled = true;
-      btn.innerText = "Already Voted";
+      btn.innerText = "Vote Submitted";
     };
 
   })
   .catch(() => {
-    document.body.innerHTML = "<h1>Error detecting location. Try again later.</h1>";
+    document.body.innerHTML = "<h1>Location detection failed. Please open via website.</h1>";
   });
 </script>
 
